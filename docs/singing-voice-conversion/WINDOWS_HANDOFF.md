@@ -8,10 +8,10 @@ Read with: [Overview](../../README.md) -> this runbook -> [Specification](SPEC.m
 
 The commands in this document are **unexecuted PowerShell examples**, compatible with Windows PowerShell 5.1 syntax. Run them one block at a time, inspect errors, and stop on failure. Do not paste them into Command Prompt or treat them as a tested installer.
 
-For a fresh checkout, start in a user-owned parent directory where `my-voice-singer` does not already exist:
+The user is the sole developer and will continue on `main`. For a fresh checkout, start in a user-owned parent directory where `my-voice-singer` does not already exist:
 
 ```powershell
-git clone --branch sanchar10-windows-singing-conversion-handoff --single-branch https://github.com/sanchar10/my-voice-singer.git
+git clone --branch main --single-branch https://github.com/sanchar10/my-voice-singer.git
 if ($LASTEXITCODE -ne 0) { throw "Clone failed; resolve access before continuing." }
 Set-Location .\my-voice-singer
 git status --short
@@ -19,16 +19,18 @@ Get-Content .\README.md
 Get-Content .\docs\singing-voice-conversion\WINDOWS_HANDOFF.md
 ```
 
-For an existing checkout, first inspect `git status --short` and preserve any work. Fetch the published handoff branch without resetting or overwriting local files:
+For an existing checkout, first inspect `git status --short` and preserve any work. Fetch `main`, switch to it, and fast-forward without resetting or overwriting local commits:
 
 ```powershell
-git fetch origin sanchar10-windows-singing-conversion-handoff
+git fetch origin refs/heads/main:refs/remotes/origin/main
 if ($LASTEXITCODE -ne 0) { throw "Fetch failed." }
-git switch --track origin/sanchar10-windows-singing-conversion-handoff
+git switch main
 if ($LASTEXITCODE -ne 0) { throw "Switch failed; inspect local branches and work before retrying." }
+git merge --ff-only origin/main
+if ($LASTEXITCODE -ne 0) { throw "Main has diverged; inspect commits before deciding how to reconcile them." }
 ```
 
-If the local branch already exists, use `git switch sanchar10-windows-singing-conversion-handoff` instead of creating another tracking branch. A clone with a restricted fetch refspec may not create the remote-tracking ref above: fetch with `git fetch origin refs/heads/sanchar10-windows-singing-conversion-handoff:refs/remotes/origin/sanchar10-windows-singing-conversion-handoff`, inspect the result, then switch. Do not force the fetch. If the PR has since merged and the branch was deleted, read the merged docs on `main` instead.
+The explicit fetch refspec also works for a previous single-branch handoff clone. If local `main` does not exist, `git switch main` normally creates it from `origin/main`; if remote selection is ambiguous, use `git switch --track origin/main` instead. Stop on divergence or uncommitted-work conflicts; do not force the fetch, reset, or discard work.
 
 Open the Windows Copilot CLI session **in this checkout**, using the user's installed CLI. Inspect any repository instructions that exist by then; there are no application files or install scripts supplied by this handoff.
 
@@ -36,6 +38,7 @@ Open the Windows Copilot CLI session **in this checkout**, using the user's inst
 
 ```text
 Continue this local singing-voice experiment on my Windows RTX 5070 PC.
+I am the sole developer and want to continue development on main.
 Read README.md and all four docs in docs/singing-voice-conversion/
 (WINDOWS_HANDOFF.md, SPEC.md, RESEARCH.md, DESIGN.md). Inspect repository
 instructions, Git state, actual OS/GPU/VRAM/driver/RAM/disk, installed tools,
